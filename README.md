@@ -18,9 +18,10 @@ Here is an example on how to use the project :
 ```python
 import os
 import dotenv # python -m pip install python-dotenv
-from youtube_exporter import download_videos, get_channel_video_urls
+from youtube_exporter import download_videos, get_channel_video_urls, get_logger
 
 dotenv.load_dotenv(".env")
+LOGGER = get_logger(log_file_path="youtube_channel_exporter.log")
 
 def main():
     channel_id = "THE_CHANNEL_ID"
@@ -35,10 +36,12 @@ def main():
         continue
 
     video_urls = get_channel_video_urls(
-        google_api_key=os.environ["GOOGLE_API_KEY"], channel_id=channel_id
+        google_api_key=os.environ["GOOGLE_API_KEY"],
+        channel_id=channel_id,
+        logger=LOGGER,
     )
 
-    download_videos(video_urls=video_urls, output_path=channel_id, batches=4)
+    download_videos(video_urls=video_urls, output_path=channel_id, batches=4, logger=LOGGER)
 
 if __name__ == "__main__":
     main()
