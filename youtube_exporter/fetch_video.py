@@ -1,3 +1,4 @@
+import logging
 import typing
 
 import requests
@@ -36,7 +37,9 @@ def _reduce_videos_page_to_video_ids(videos_page: dict) -> list[str]:
     ]
 
 
-def get_channel_video_ids(google_api_key: str, channel_id: str) -> typing.Generator[str, typing.Any, None]:
+def get_channel_video_ids(
+    google_api_key: str, channel_id: str, logger: logging.Logger | None = None
+) -> typing.Generator[str, typing.Any, None]:
     next_page_token = ""
 
     while next_page_token is not None:
@@ -47,11 +50,22 @@ def get_channel_video_ids(google_api_key: str, channel_id: str) -> typing.Genera
         )
 
         for video_id in _reduce_videos_page_to_video_ids(videos_page=videos_page):
+            if isinstance(logger, logging.Logger):
+                logger.info("Found new video ID : %s", video_id)
+
             yield video_id
 
         next_page_token = videos_page.get("nextPageToken", None)
 
 
-def get_channel_video_urls(google_api_key: str, channel_id: str) -> typing.Generator[str, typing.Any, None]:
-    for video_id in get_channel_video_ids(google_api_key=google_api_key, channel_id=channel_id):
-        yield f"https://www.youtube.com/watch?v={video_id}"
+def get_channel_video_urls(
+    google_api_key: str, channel_id: str, logger: logging.Logger | None = None
+) -> typing.Generator[str, typing.Any, None]:
+    for video_id in get_channel_video_ids(
+        google_api_key=google_api_key, channel_id=channel_id
+    ):
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        if isinstance(logger, logging.Logger):
+            logger.info("Found new video URL : %s", url)
+
+        yield url
