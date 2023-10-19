@@ -45,7 +45,7 @@ def download_video(
 
     video_path = video.download(output_path=output_path)
     if isinstance(logger, logging.Logger):
-        logger.info("Video '%s' downloaded as '%s'.", video_path)
+        logger.info("Video '%s' downloaded as '%s'.", video_url, video_path)
 
 
 def download_videos(
