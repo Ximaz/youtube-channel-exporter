@@ -1,17 +1,10 @@
 import logging
 import os
-import threading
+import multiprocessing
 import typing
 
 
 import pytube
-
-
-def _batch_list(
-    iterable: list, batches: int
-) -> typing.Generator[list, typing.Any, None]:
-    for i in range(0, len(iterable), batches):
-        yield iterable[i : i + batches]
 
 
 def download_video(
@@ -51,34 +44,20 @@ def download_video(
 def download_videos(
     video_urls: typing.Iterable[str],
     output_path: str,
-    batches: int = 4,
+    cpu_core: int = 4,
     skip_existing: bool = True,
     logger: logging.Logger | None = None,
 ):
-    threads = list(
-        map(
-            lambda video_url: threading.Thread(
-                target=download_video,
-                kwargs=dict(
-                    video_url=video_url,
-                    output_path=output_path,
-                    skip_existing=skip_existing,
-                    logger=logger,
-                ),
+    pool = multiprocessing.Pool(processes=cpu_core)
+    for video_url in video_urls:
+        pool.apply_async(
+            func=download_video,
+            kwds=dict(
+                video_url=video_url,
+                output_path=output_path,
+                skip_existing=skip_existing,
+                logger=logger,
             ),
-            video_urls,
         )
-    )
-
-    batch_number = 1
-    for batch in _batch_list(iterable=threads, batches=batches):
-        if isinstance(logger, logging.Logger):
-            logger.info("Starting batch n°%d of size %d.", batch_number, len(batch))
-
-        for thread in batch:
-            thread.start()
-
-        for thread in batch:
-            thread.join()
-
-        batch_number += 1
+    pool.close()
+    pool.join()

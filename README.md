@@ -41,7 +41,9 @@ def main():
         logger=LOGGER,
     )
 
-    download_videos(video_urls=video_urls, output_path=channel_id, batches=4, logger=LOGGER)
+    download_videos(
+        video_urls=video_urls, output_path=output_path, cpu_core=4,logger=LOGGER
+    )
 
 if __name__ == "__main__":
     main()
