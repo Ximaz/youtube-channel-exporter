@@ -1,6 +1,6 @@
+import concurrent.futures
 import logging
 import os
-import multiprocessing
 import typing
 
 
@@ -18,7 +18,7 @@ def download_video(
     if skip_existing:
         is_already_downloaded = any(
             map(
-                lambda filename: filename.startswith(video.title),
+                lambda filename: filename.startswith(youtube_video.title),
                 os.listdir(output_path),
             )
         )
@@ -36,7 +36,11 @@ def download_video(
             logger.warning("Unable to download the video '%s'.", video_url)
         return
 
+    if isinstance(logger, logging.Logger):
+        logger.info("Downloading video '%s' into '%s'.", video_url, output_path)
+
     video_path = video.download(output_path=output_path)
+
     if isinstance(logger, logging.Logger):
         logger.info("Video '%s' downloaded as '%s'.", video_url, video_path)
 
@@ -44,20 +48,20 @@ def download_video(
 def download_videos(
     video_urls: typing.Iterable[str],
     output_path: str,
-    cpu_core: int = 4,
+    threads: int = 4,
     skip_existing: bool = True,
     logger: logging.Logger | None = None,
 ):
-    pool = multiprocessing.Pool(processes=cpu_core)
-    for video_url in video_urls:
-        pool.apply_async(
-            func=download_video,
-            kwds=dict(
+    with concurrent.futures.ThreadPoolExecutor(max_workers=threads) as pool:
+        queue = [
+            pool.submit(
+                download_video,
                 video_url=video_url,
                 output_path=output_path,
                 skip_existing=skip_existing,
                 logger=logger,
-            ),
-        )
-    pool.close()
-    pool.join()
+            )
+            for video_url in video_urls
+        ]
+        for task in concurrent.futures.as_completed(fs=queue):
+            task.result()
