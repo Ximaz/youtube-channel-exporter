@@ -51,7 +51,7 @@ def get_channel_video_ids(
 
         for video_id in _reduce_videos_page_to_video_ids(videos_page=videos_page):
             if isinstance(logger, logging.Logger):
-                logger.info("Found new video ID : %s", video_id)
+                logger.info("Found video ID : '%s'.", video_id)
 
             yield video_id
 
@@ -66,6 +66,6 @@ def get_channel_video_urls(
     ):
         url = f"https://www.youtube.com/watch?v={video_id}"
         if isinstance(logger, logging.Logger):
-            logger.info("Found new video URL : %s", url)
+            logger.info("Found video : '%s'.", url)
 
         yield url

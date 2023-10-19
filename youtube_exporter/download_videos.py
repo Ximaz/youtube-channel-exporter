@@ -1,8 +1,8 @@
 import concurrent.futures
 import logging
 import os
+import urllib.error
 import typing
-
 
 import pytube
 
@@ -18,7 +18,8 @@ def download_video(
     if skip_existing:
         is_already_downloaded = any(
             map(
-                lambda filename: filename.startswith(youtube_video.title),
+                lambda filename: filename.startswith(youtube_video.title)
+                and os.path.getsize(os.path.join(output_path, filename)) > 0,
                 os.listdir(output_path),
             )
         )
@@ -39,10 +40,14 @@ def download_video(
     if isinstance(logger, logging.Logger):
         logger.info("Downloading video '%s' into '%s'.", video_url, output_path)
 
-    video_path = video.download(output_path=output_path)
-
-    if isinstance(logger, logging.Logger):
-        logger.info("Video '%s' downloaded as '%s'.", video_url, video_path)
+    try:
+        video_path = video.download(output_path=output_path, max_retries=10)
+    except urllib.error.HTTPError:
+        if isinstance(logger, logging.Logger):
+            logger.error("Unable to download the Video '%s'.", video_url)
+    else:
+        if isinstance(logger, logging.Logger):
+            logger.info("Video '%s' downloaded as '%s'.", video_url, video_path)
 
 
 def download_videos(
