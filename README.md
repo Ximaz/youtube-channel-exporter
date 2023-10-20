@@ -20,7 +20,7 @@ import os
 import dotenv # python -m pip install python-dotenv
 from youtube_exporter import download_videos, get_channel_video_urls, get_logger
 
-dotenv.load_dotenv(".env")
+dotenv.load_dotenv(".env") # Best practice for your API key.
 LOGGER = get_logger(log_file_path="youtube_channel_exporter.log")
 
 def main():
@@ -31,18 +31,21 @@ def main():
 
     if not os.path.exists(channel_id):
         print(
-            f"Unable to create the downlaod folder for the channel '{channel_id}'."
+            f"Unable to create the download folder for the channel '{channel_id}'."
         )
         continue
 
     video_urls = get_channel_video_urls(
         google_api_key=os.environ["GOOGLE_API_KEY"],
         channel_id=channel_id,
-        logger=LOGGER,
+        logger=LOGGER, # Optionnal
     )
 
     download_videos(
-        video_urls=video_urls, output_path=output_path, cpu_core=4,logger=LOGGER
+        video_urls=video_urls,
+        output_path=output_path,
+        threads=10,   # 10 videos downloaded simultaneously
+        logger=LOGGER # Optionnal
     )
 
 if __name__ == "__main__":
