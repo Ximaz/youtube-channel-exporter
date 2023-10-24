@@ -40,12 +40,12 @@ def main():
         channel_id=channel_id,
         logger=LOGGER, # Optionnal
     )
-
     download_videos(
         video_urls=video_urls,
         output_path=output_path,
-        threads=10,   # 10 videos downloaded simultaneously
-        logger=LOGGER # Optionnal
+        threads=10,         # 10 videos downloaded simultaneously.
+        skip_existing=True, # Prevent downloading twice the same video.
+        logger=LOGGER,      # Optionnal
     )
 
 if __name__ == "__main__":

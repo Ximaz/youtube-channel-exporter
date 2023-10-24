@@ -15,21 +15,6 @@ def download_video(
 ):
     youtube_video = pytube.YouTube(url=video_url)
 
-    if skip_existing:
-        is_already_downloaded = any(
-            map(
-                lambda filename: filename.startswith(youtube_video.title)
-                and os.path.getsize(os.path.join(output_path, filename)) > 0,
-                os.listdir(output_path),
-            )
-        )
-        if is_already_downloaded:
-            if isinstance(logger, logging.Logger):
-                logger.info(
-                    "Skipping video '%s' because it already got downloaded.", video_url
-                )
-            return
-
     video = youtube_video.streams.get_highest_resolution()
 
     if video is None:
@@ -37,11 +22,8 @@ def download_video(
             logger.warning("Unable to download the video '%s'.", video_url)
         return
 
-    if isinstance(logger, logging.Logger):
-        logger.info("Downloading video '%s' into '%s'.", video_url, output_path)
-
     try:
-        video_path = video.download(output_path=output_path, max_retries=10)
+        video_path = video.download(output_path=output_path, skip_existing=skip_existing, max_retries=3)
     except urllib.error.HTTPError:
         if isinstance(logger, logging.Logger):
             logger.error("Unable to download the Video '%s'.", video_url)
@@ -69,4 +51,11 @@ def download_videos(
             for video_url in video_urls
         ]
         for task in concurrent.futures.as_completed(fs=queue):
-            task.result()
+            try:
+                task.result()
+            except Exception:
+                exception = task.exception()
+                if isinstance(logger, logging.Logger):
+                    logger.error("An exception occured : %s", ' '.join(exception.args))
+
+
